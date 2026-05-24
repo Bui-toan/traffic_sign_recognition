@@ -71,10 +71,6 @@ class TrafficSignGUI:
                                        bg="#ffffff", fg="#333333", width=22, relief=tk.GROOVE, command=self.load_image_file)
         self.btn_src_image.grid(row=0, column=0, padx=15)
 
-        self.btn_src_video = tk.Button(top_frame, text="🎞️ 2. Chọn Video File", font=("Arial", 10, "bold"),
-                                       bg="#ffffff", fg="#333333", width=22, relief=tk.GROOVE, command=self.load_video_file)
-        self.btn_src_video.grid(row=0, column=1, padx=15)
-
         self.btn_src_webcam = tk.Button(top_frame, text="📹 3. Chọn Luồng Webcam", font=("Arial", 10, "bold"),
                                         bg="#ffffff", fg="#333333", width=22, relief=tk.GROOVE, command=self.load_webcam_source)
         self.btn_src_webcam.grid(row=0, column=2, padx=15)
@@ -204,16 +200,6 @@ class TrafficSignGUI:
         except Exception as e:
             messagebox.showerror("Lỗi", str(e))
 
-    def load_video_file(self):
-        file_path = filedialog.askopenfilename(filetypes=[("Video files", "*.mp4 *.avi *.mkv *.mov")])
-        if not file_path: return
-        self.video_source_path = file_path
-        self.current_mode = "video"
-        
-        self.image_label.config(image="", text=f"🎞️ Đã nạp thành công file Video:\n{os.path.basename(file_path)}\n\nBấm nút phía dưới để bắt đầu quét!")
-        self.result_label.config(text="KẾT QUẢ DỰ ĐOÁN HỆ THỐNG: ĐÃ NẠP VIDEO - SẴN SÀNG QUÉT", fg="#00bcd4", bg="#e4e6eb")
-        self.btn_main_predict.config(state=tk.NORMAL, text="🚀 CHẠY DỰ ĐOÁN VIDEO FILE", bg="#00bcd4")
-
     def load_webcam_source(self):
         self.current_mode = "webcam"
         self.image_label.config(image="", text="📹 Sẵn sàng kết nối thiết bị Camera Webcam máy tính.\n\nBấm nút phía dưới để mở luồng!")
@@ -250,18 +236,33 @@ class TrafficSignGUI:
             if not cap.isOpened():
                 messagebox.showerror("Lỗi", "Không thể truy cập nguồn video!")
                 return
-                
+
             cv2.namedWindow(title)
             while cap.isOpened():
                 ret, frame = cap.read()
-                if not ret: break
-                
-                processed_frame, _ = self.pipeline_process(frame)
+                if not ret:
+                    break
+
+                processed_frame, detected_sign = self.pipeline_process(frame)
+
+                if detected_sign:
+                    cv2.putText(
+                        processed_frame,
+                        f"Traffic Sign: {no_accent_vietnamese(detected_sign)}",
+                        (20, 40),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        1,
+                        (0, 255, 0),
+                        2,
+                        cv2.LINE_AA
+                    )
+
                 cv2.imshow(title, processed_frame)
-                
+
                 key = cv2.waitKey(1) & 0xFF
                 if key == ord('q') or cv2.getWindowProperty(title, cv2.WND_PROP_VISIBLE) < 1:
                     break
+
             cap.release()
             cv2.destroyAllWindows()
 
