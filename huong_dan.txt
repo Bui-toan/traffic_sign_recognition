@@ -1,0 +1,6 @@
+1.Cài thư viện: pip install -r requirements.txt
+2.Trích xuất ROI biển báo: python extract_roi.py
+3.Trích xuất đặc trưng HOG: python prepare_dataset.py
+4.Train mô hình SVM :python -m src.models.train_svm
+5.Đánh giá mô hình :python -m src.evaluation.evaluate
+6.Chạy ứng dụng GUI: python app_gui.py
